@@ -1,0 +1,28 @@
+---
+interface Props {
+  title?: string;
+  subtitle?: string;
+  className?: string;
+}
+
+const {
+  title = "Because Clean Feels Better",
+  subtitle = "About us",
+  className = "box-style"
+} = Astro.props;
+---
+
+<!-- start wpo-page-title -->
+<div class={`breadcumb-area ${className}`}>
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="breadcumb-wrap">
+                    <h2>{title}</h2>
+                    <h3>{subtitle}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end page-title -->

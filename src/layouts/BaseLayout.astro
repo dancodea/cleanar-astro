@@ -1,0 +1,133 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Preloader from '../components/Preloader.astro';
+import BackToTop from '../components/BackToTop.astro';
+
+interface Props {
+  title?: string;
+  showTopbar?: boolean;
+  headerClass?: string;
+}
+
+const {
+  title = "Cleanar - Cleaning Services HTML Template",
+  showTopbar = true,
+  headerClass = "box-style"
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Meta Tags -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="wpOceans">
+    <link rel="shortcut icon" type="image/svg+xml" href="/assets/images/logo.svg">
+    
+    <!-- Page Title -->
+    <title>{title}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Parkinsans:wght@300..800&display=swap" rel="stylesheet">
+
+    <!-- Icon fonts -->
+    <link href="/assets/css/themify-icons.css" rel="stylesheet">
+    <link href="/assets/css/flaticon.css" rel="stylesheet">
+    <!-- Bootstrap core CSS -->
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Plugins for this template -->
+    <link href="/assets/css/animate.css" rel="stylesheet">
+    <link href="/assets/css/owl.carousel.css" rel="stylesheet">
+    <link href="/assets/css/owl.theme.css" rel="stylesheet">
+    <link href="/assets/css/slick.css" rel="stylesheet">
+    <link href="/assets/css/slick-theme.css" rel="stylesheet">
+    <link href="/assets/css/swiper.min.css" rel="stylesheet">
+    <link href="/assets/css/owl.transitions.css" rel="stylesheet">
+    <link href="/assets/css/jquery.fancybox.css" rel="stylesheet">
+    <link href="/assets/css/odometer-theme-default.css" rel="stylesheet">
+    <!-- Custom styles for this template -->
+    <link href="/assets/sass/style.css" rel="stylesheet">
+
+    <ClientRouter />
+</head>
+<body>
+    <!-- start page-wrapper -->
+    <div class="page-wrapper">
+        <Preloader />
+        <div id="smooth-wrapper">
+            <div id="smooth-content">
+                <Header showTopbar={showTopbar} headerClass={headerClass} />
+                <main>
+                    <slot />
+                </main>
+                <Footer />
+            </div>
+        </div>
+        <BackToTop />
+    </div>
+    <!-- end of page-wrapper -->
+
+    <!-- Core Scripts — loaded with is:inline so they run on every navigation -->
+    <script is:inline src="/assets/js/jquery.min.js"></script>
+    <script is:inline src="/assets/js/bootstrap.bundle.min.js"></script>
+    <script is:inline src="/assets/js/modernizr.custom.js"></script>
+    <script is:inline src="/assets/js/jquery-plugin-collection.js"></script>
+    <script is:inline src="/assets/js/gsap-script.js"></script>
+    <script is:inline src="/assets/js/script.js"></script>
+
+    <!-- Astro View-Transition lifecycle hook -->
+    <script is:inline>
+      /**
+       * Before navigation starts: reveal the preloader overlay immediately so that
+       * the route transition is smooth and matches the original template.
+       */
+      document.addEventListener('astro:before-preparation', function () {
+        if (typeof window.showPreloader === 'function') {
+          window.showPreloader();
+        } else {
+          var el = document.querySelector('.preloader');
+          if (el) {
+            el.style.display = 'block';
+            el.style.opacity = '1';
+          }
+        }
+      });
+
+      /**
+       * After the new page DOM has been swapped:
+       * Reset scroll position to top and ensure preloader is visible.
+       */
+      document.addEventListener('astro:after-swap', function () {
+        window.scrollTo(0, 0);
+        var el = document.querySelector('.preloader');
+        if (el) {
+          el.style.display = 'block';
+          el.style.opacity = '1';
+        }
+      });
+
+      /**
+       * On each Astro client-side navigation (and initial load):
+       * Initialize page plugins and GSAP animations, then run the preloader fade-out
+       * which triggers the WOW entry animations.
+       */
+      document.addEventListener('astro:page-load', function () {
+        if (typeof window.initPagePlugins === 'function') {
+          window.initPagePlugins();
+        }
+        if (typeof window.initGsapAnimations === 'function') {
+          window.initGsapAnimations();
+        }
+        if (typeof window.runPreloaderAndWow === 'function') {
+          window.runPreloaderAndWow();
+        }
+      });
+    </script>
+</body>
+</html>
