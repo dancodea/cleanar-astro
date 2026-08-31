@@ -81,53 +81,107 @@ const {
     <script is:inline src="/assets/js/gsap-script.js"></script>
     <script is:inline src="/assets/js/script.js"></script>
 
-    <!-- Astro View-Transition lifecycle hook -->
+    <!-- Astro View-Transition lifecycle hook & Safe Initialization -->
     <script is:inline>
-      /**
-       * Before navigation starts: reveal the preloader overlay immediately so that
-       * the route transition is smooth and matches the original template.
-       */
-      document.addEventListener('astro:before-preparation', function () {
-        if (typeof window.showPreloader === 'function') {
-          window.showPreloader();
-        } else {
-          var el = document.querySelector('.preloader');
-          if (el) {
-            el.style.display = 'block';
-            el.style.opacity = '1';
+      (function () {
+        var initializedOnThisPage = false;
+
+        function safeInitAll() {
+          try {
+            if (typeof window.initPagePlugins === 'function') {
+              window.initPagePlugins();
+            }
+          } catch (e) {
+            console.error('initPagePlugins error:', e);
+          }
+
+          try {
+            if (typeof window.initGsapAnimations === 'function') {
+              window.initGsapAnimations();
+            }
+          } catch (e) {
+            console.error('initGsapAnimations error:', e);
+          }
+
+          try {
+            if (typeof window.runPreloaderAndWow === 'function') {
+              window.runPreloaderAndWow();
+            } else {
+              var p = document.querySelector('.preloader');
+              if (p) p.style.display = 'none';
+            }
+          } catch (e) {
+            console.error('runPreloaderAndWow error:', e);
+            var p = document.querySelector('.preloader');
+            if (p) p.style.display = 'none';
           }
         }
-      });
 
-      /**
-       * After the new page DOM has been swapped:
-       * Reset scroll position to top and ensure preloader is visible.
-       */
-      document.addEventListener('astro:after-swap', function () {
-        window.scrollTo(0, 0);
-        var el = document.querySelector('.preloader');
-        if (el) {
-          el.style.display = 'block';
-          el.style.opacity = '1';
-        }
-      });
+        // Before SPA navigation starts: show preloader curtain immediately
+        document.addEventListener('astro:before-preparation', function () {
+          initializedOnThisPage = false;
+          if (typeof window.showPreloader === 'function') {
+            window.showPreloader();
+          } else {
+            var p = document.querySelector('.preloader');
+            if (p) {
+              p.style.display = 'block';
+              p.style.opacity = '1';
+            }
+          }
+        });
 
-      /**
-       * On each Astro client-side navigation (and initial load):
-       * Initialize page plugins and GSAP animations, then run the preloader fade-out
-       * which triggers the WOW entry animations.
-       */
-      document.addEventListener('astro:page-load', function () {
-        if (typeof window.initPagePlugins === 'function') {
-          window.initPagePlugins();
+        // After SPA swap: scroll to top and ensure preloader is visible
+        document.addEventListener('astro:after-swap', function () {
+          window.scrollTo(0, 0);
+          var p = document.querySelector('.preloader');
+          if (p) {
+            p.style.display = 'block';
+            p.style.opacity = '1';
+          }
+        });
+
+        // Main Astro page load handler (fires on both initial load and SPA navigation)
+        document.addEventListener('astro:page-load', function () {
+          initializedOnThisPage = true;
+          safeInitAll();
+        });
+
+        // Initial Load Fallbacks in case astro:page-load dispatched before script parsed
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+          setTimeout(function () {
+            if (!initializedOnThisPage) {
+              initializedOnThisPage = true;
+              safeInitAll();
+            }
+          }, 30);
+        } else {
+          document.addEventListener('DOMContentLoaded', function () {
+            if (!initializedOnThisPage) {
+              initializedOnThisPage = true;
+              safeInitAll();
+            }
+          });
+          window.addEventListener('load', function () {
+            if (!initializedOnThisPage) {
+              initializedOnThisPage = true;
+              safeInitAll();
+            }
+          });
         }
-        if (typeof window.initGsapAnimations === 'function') {
-          window.initGsapAnimations();
-        }
-        if (typeof window.runPreloaderAndWow === 'function') {
-          window.runPreloaderAndWow();
-        }
-      });
+
+        // Absolute fail-safe: Ensure preloader NEVER stays stuck
+        setTimeout(function () {
+          var p = document.querySelector('.preloader');
+          if (p && window.getComputedStyle(p).display !== 'none') {
+            if (typeof window.runPreloaderAndWow === 'function') {
+              window.runPreloaderAndWow();
+            } else {
+              p.style.display = 'none';
+            }
+          }
+        }, 1000);
+      })();
     </script>
 </body>
 </html>

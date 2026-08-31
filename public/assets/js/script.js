@@ -13,6 +13,39 @@
 
     window.runPreloaderAndWow = function () {
         const $preloader = $(".preloader");
+        let wowStarted = false;
+
+        function startWow() {
+            if (wowStarted) return;
+            wowStarted = true;
+
+            if (typeof WOW !== "undefined") {
+                try {
+                    if (window._wowInstance && typeof window._wowInstance.stop === "function") {
+                        window._wowInstance.stop();
+                    }
+                    window._wowInstance = new WOW({
+                        boxClass:    "wow",
+                        animateClass: "animated",
+                        offset:      0,
+                        mobile:      true,
+                        live:        true
+                    });
+                    window._wowInstance.init();
+                } catch (err) {
+                    console.warn("WOW init error:", err);
+                }
+            }
+
+            // Safety guarantee: Ensure no content stays hidden forever
+            setTimeout(function () {
+                $(".wow").each(function () {
+                    if (!$(this).hasClass("animated")) {
+                        this.style.visibility = "visible";
+                    }
+                });
+            }, 800);
+        }
 
         // Clean up previous WOW instance if any
         if (window._wowInstance && typeof window._wowInstance.stop === "function") {
@@ -26,27 +59,19 @@
             this.style.animationName = "none";
         });
 
-        function startWow() {
-            if (typeof WOW !== "undefined") {
-                if (window._wowInstance && typeof window._wowInstance.stop === "function") {
-                    window._wowInstance.stop();
-                }
-                window._wowInstance = new WOW({
-                    boxClass:    "wow",
-                    animateClass: "animated",
-                    offset:      0,
-                    mobile:      true,
-                    live:        true
-                });
-                window._wowInstance.init();
-            }
-        }
-
         if ($preloader.length) {
-            $preloader.stop(true, true).css({ display: "block", opacity: 1 });
-            $preloader.delay(100).fadeOut(500, function () {
+            $preloader.stop(true, false).delay(50).fadeOut(400, function () {
+                $(this).hide().css("display", "none");
                 startWow();
             });
+
+            // Fallback: guaranteed dismissal after 500ms
+            setTimeout(function () {
+                if ($preloader.is(":visible")) {
+                    $preloader.hide().css("display", "none");
+                }
+                startWow();
+            }, 500);
         } else {
             startWow();
         }
@@ -744,6 +769,9 @@
     ====================================================================== */
     $(document).ready(function () {
         window.initPagePlugins();
+        if (typeof window.runPreloaderAndWow === "function") {
+            window.runPreloaderAndWow();
+        }
     });
 
 })(window.jQuery);
